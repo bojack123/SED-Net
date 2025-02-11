@@ -166,8 +166,8 @@ model_inst = SEDNet(
         nn_nb=my_knn  # default is 64
     )
 
-model = model.cuda( )
-model_inst = model_inst.cuda( )
+model = model.cpu( )
+model_inst = model_inst.cpu( )
 
 split_dict = {"train": config.num_train, "val": config.num_val, "test": config.num_test}
 ms = MeanShift()

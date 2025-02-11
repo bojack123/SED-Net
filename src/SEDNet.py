@@ -332,7 +332,7 @@ class SEDNet(nn.Module):
         if compute_loss:
             embed_loss = self.loss_function(embedding, labels.data.cpu().numpy())  # cluster instance
         else:
-            embed_loss = torch.zeros(1).cuda()
+            embed_loss = torch.zeros(1).cpu()
 
         ret_res = [embedding, primitives_log_prob, embed_loss,]
         if self.edge_module:

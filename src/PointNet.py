@@ -145,7 +145,7 @@ def get_graph_feature(x, k1=20, k2=20, idx=None, Norm_sample=False):
     if idx is None:
         idx = knn(x, k1=k1, k2=k2, normal=Norm_sample).contiguous()
 
-    device = torch.device('cuda')
+    device = torch.device('cpu')
 
     idx_base = torch.arange(0, batch_size, device=device).contiguous().view(-1, 1, 1) * num_points
 
@@ -182,7 +182,7 @@ def get_graph_feature_with_normals(x, k1=20, k2=20, idx=None, normal_metric_W=1.
     if idx is None:
         idx = knn_points_normals(x, k1=k1, k2=k2, normal_metric_W=normal_metric_W, normal=Norm_sample).contiguous()
 
-    device = torch.device('cuda')
+    device = torch.device('cpu')
 
     idx_base = torch.arange(0, batch_size, device=device).contiguous().view(-1, 1, 1) * num_points
 

@@ -3,7 +3,6 @@ This scrip trains model to predict per point primitive type.
 """
 import json
 import logging
-import nntplib
 import os
 import sys
 from shutil import copyfile
@@ -137,7 +136,7 @@ model = SEDNet(
 
 
 print("model got!")
-model = model.cuda()
+# model = model.cuda()
 if config.optim=="adam":
     optimizer = optim.Adam(model.parameters(), lr=config.lr)
 else:
@@ -154,7 +153,7 @@ print("model to cuda!")
 if config.preload_model:
     print("loading from ckpt:", config.pretrain_model_path)
 
-    state_dict = torch.load(config.pretrain_model_path)
+    state_dict = torch.load(config.pretrain_model_path, map_location=torch.device('cpu'), weights_only=True)
     if torch.cuda.device_count() > 1:
         state_dict = {"module."+k: state_dict[k] for k in state_dict.keys()} if not list(state_dict.keys())[0].startswith("module.") else state_dict
     else:
@@ -182,9 +181,10 @@ print("model ckpt load!")
 
 mix_train_dataset = my_mix_dataset(if_normals=if_normals, if_train=True, aug=False)  # ==== 
 
+# loader_train = torch.utils.data.DataLoader(
+#     mix_train_dataset, batch_size=config.batch_size, num_workers=8, shuffle=True, drop_last=True, persistent_workers=True)
 loader_train = torch.utils.data.DataLoader(
-    mix_train_dataset, batch_size=config.batch_size, num_workers=8, shuffle=True, drop_last=True, persistent_workers=True
-)
+    mix_train_dataset, batch_size=config.batch_size, num_workers=0, shuffle=True, drop_last=True)
 
 print("get mixed train data")
 
@@ -192,9 +192,10 @@ print("get mixed train data")
 
 mix_test_dataset = ori_simple_data(if_normals=if_normals, if_train=False)
 
+# loader_test = torch.utils.data.DataLoader(
+#     mix_test_dataset, batch_size=config.batch_size, num_workers=8, shuffle=False, drop_last=True, persistent_workers=True)
 loader_test = torch.utils.data.DataLoader(
-    mix_test_dataset, batch_size=config.batch_size, num_workers=8, shuffle=False, drop_last=True, persistent_workers=True
-)
+    mix_test_dataset, batch_size=config.batch_size, num_workers=0, shuffle=False, drop_last=True)
 
 print("get mixed test data")
 
@@ -203,10 +204,10 @@ print("current LR: ", cur_lr)
 
 
 if config.sche == "cos":
-    scheduler = CosineAnnealingLR(optimizer, T_max=10, eta_min=cur_lr / 20, verbose=True)
+    scheduler = CosineAnnealingLR(optimizer, T_max=10, eta_min=cur_lr / 20)
 else:
     scheduler = ReduceLROnPlateau(
-        optimizer, mode="min", factor=0.5, patience=config.patience, verbose=True, min_lr=5e-5
+        optimizer, mode="min", factor=0.5, patience=config.patience, min_lr=5e-5
     )
 
 
@@ -219,6 +220,15 @@ eval_inter = config.eval_T
 todebug = False
 
 cur_inter = 0
+
+# points, labels, normals, primitives, edges, edges_W = mix_train_dataset[0]
+# print(points.shape)
+# print(labels.shape)
+# print(normals.shape)
+# print(primitives.shape)
+# print(edges.shape)
+# print(edges_W.shape)
+
 for e in range(config.epochs):
     train_emb_losses = []
     train_prim_losses = []
@@ -241,7 +251,7 @@ for e in range(config.epochs):
         edge_embed_losses = 0
         for _ in range(num_iter):
             points, labels, normals, primitives, edges, edges_W = data
-            points, labels, normals, primitives, edges, edges_W = points.cuda(), labels.cuda(), normals.cuda(), primitives.cuda(), edges.cuda(), edges_W.cuda()
+            # points, labels, normals, primitives, edges, edges_W = points.cuda(), labels.cuda(), normals.cuda(), primitives.cuda(), edges.cuda(), edges_W.cuda()
             aux_prim_logprob = None
             if if_normals:
                 input = torch.cat([points, normals], 2).transpose(1,2)

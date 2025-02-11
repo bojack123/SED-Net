@@ -40,7 +40,7 @@ class EmbeddingLoss:
         max_segments = 5
         batch_size = output.shape[0]
         N = output.shape[2]
-        loss_diff = torch.tensor([0.], requires_grad=True).cuda()
+        loss_diff = torch.tensor([0.], requires_grad=True).cpu()
         relu = torch.nn.ReLU()
 
         output = output.permute(0, 2, 1)  # B x N x 128
@@ -91,7 +91,7 @@ class EmbeddingLoss:
                 only_one_segments += 1
                 continue
 
-            loss_shape = torch.tensor([0.], requires_grad=True).cuda()
+            loss_shape = torch.tensor([0.], requires_grad=True).cpu()
             for _ in range(num_iterations):
                 k1 = np.random.choice(len_keys, 1)[0]
                 k2 = np.random.choice(len_keys, 1)[0]
@@ -116,7 +116,7 @@ class EmbeddingLoss:
                 loss = torch.sum(constraint) - constraint.trace()
 
                 satisfied = torch.sum(constraint > 0) + 1.0
-                satisfied = satisfied.type(torch.cuda.FloatTensor)
+                satisfied = satisfied.type(torch.FloatTensor)
 
                 loss_shape = loss_shape + loss / satisfied.detach()
 
